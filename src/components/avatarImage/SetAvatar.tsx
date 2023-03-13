@@ -2,39 +2,34 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { Buffer } from "buffer";
-// import loader from "../assets/loader.gif";
+import { toastOptions } from "../../utils/toastOptions";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { setAvatarRoute } from "../../utils/APIRoutes";
-export default function SetAvatar() {
-  const api = `https://api.multiavatar.com/4645646`;
-  const navigate = useNavigate();
-  const [avatars, setAvatars] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedAvatar, setSelectedAvatar] = useState<any>(undefined);
-  
-  const toastOptions: any = {
-    position: "bottom-right",
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "dark",
-  };
+import { UserInfo, AvatarData } from "../../models/interfaces";
+import { Avatarapi } from "../../constants/constants";
 
-  useEffect(() => {
-    if (!localStorage.getItem("userInfo")) navigate("/login");
-  }, []);
+export default function SetAvatar() {
+  const navigate = useNavigate();
+  const [avatars, setAvatars] = useState<string[]>(() => []);
+  const [isLoading, setIsLoading] = useState<boolean>(() => true);
+  const [selectedAvatar, setSelectedAvatar] = useState<number | undefined>(() => undefined);
 
   const setProfilePicture = async () => {
     if (selectedAvatar === undefined) {
       toast.error("Please select an avatar", toastOptions);
     } else {
-      const user = await JSON.parse(localStorage.getItem("userInfo") as string);
+      const user: UserInfo = JSON.parse(
+        localStorage.getItem("userInfo")?.trim() as string
+      );
 
-      const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
-        image: avatars[selectedAvatar],
-      });
+      const { data } = await axios.post<AvatarData>(
+        `${setAvatarRoute}/${user._id}`,
+        {
+          image: avatars[selectedAvatar],
+        }
+      );
 
       if (data.isSet) {
         user.isAvatarImageSet = true;
@@ -48,12 +43,12 @@ export default function SetAvatar() {
   };
 
   const fetchAvatar = async () => {
-    const data: any = [];
+    const data: string[] = [];
     for (let i = 0; i < 2; i++) {
-      const image: any = await axios.get(
-        `${api}/${Math.round(Math.random() * 1000)}`
+      const { data: image } = await axios.get(
+        `${Avatarapi}/${Math.round(Math.random() * 1000)}`
       );
-      const buffer = new Buffer(image.data);
+      const buffer = Buffer.from(image);
       data.push(buffer.toString("base64"));
     }
     setAvatars(data);
@@ -61,14 +56,19 @@ export default function SetAvatar() {
   };
 
   useEffect(() => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (!userInfo) {
+      navigate("/login");
+      return;
+    }
     fetchAvatar();
   }, []);
+
   return (
     <>
       {isLoading ? (
         <Container>
           <h2>loading</h2>
-          {/* <img src={loader} alt="loader" className="loader" /> */}
         </Container>
       ) : (
         <Container>

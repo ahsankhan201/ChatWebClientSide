@@ -1,20 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import axios from "axios";
 import styled from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { registerRoute } from "../../utils/APIRoutes";
+import { toastOptions } from "../../utils/toastOptions";
 
 export default function Register() {
   const navigate = useNavigate();
-  const toastOptions:any = {
-    position: "bottom-right",
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "dark",
-  };
+
   const [values, setValues] = useState({
     username: "",
     email: "",
@@ -26,10 +21,9 @@ export default function Register() {
     if (localStorage.getItem("userInfo")) {
       navigate("/");
     }
-    
   }, []);
 
-  const handleChange = (event:any) => {
+  const handleChange = (event: any) => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
 
@@ -60,40 +54,34 @@ export default function Register() {
     return true;
   };
 
-  const handleSubmit = async (event:any) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (handleValidation()) {
-        try {
-            const { email, username, password } = values;
-            console.log(values)
-            const { data } = await axios.post(registerRoute, {
-              username,
-              email,
-              password,
-            });
-            if (data.status === false) {
-                toast.error(data.msg, toastOptions);
-              }
-              if (data.status === true) {
-                localStorage.setItem(
-                "userInfo",
-                  JSON.stringify(data.user)
-                );
-                navigate("/");
-              }
-        } catch (error) {
-            console.log('error', error)
+      try {
+        const { email, username, password } = values;
+        console.log(values);
+        const { data } = await axios.post(registerRoute, {
+          username,
+          email,
+          password,
+        });
+        if (data.status === false) {
+          toast.error(data.msg, toastOptions);
         }
-
+        if (data.status === true) {
+          localStorage.setItem("userInfo", JSON.stringify(data.user));
+          navigate("/");
+        }
+      } catch (error) {
+        console.log("error", error);
+      }
     }
   };
 
   return (
     <>
       <FormContainer>
-        <form action=""
-         onSubmit={(event) => handleSubmit(event)}
-         >
+        <form action="" onSubmit={(event) => handleSubmit(event)}>
           <div className="brand">
             <h1>Technovez_Chat</h1>
           </div>

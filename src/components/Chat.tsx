@@ -1,66 +1,74 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import styled from "styled-components";
 import { allUsersRoute, host } from "../utils/APIRoutes";
 import ChatContainer from "./chatContainer/ChatContainer";
 import Contacts from "./contacts/Contacts";
 import Welcome from "./welcome/Welcome";
+import { State, User } from "../models/interfaces";
 
 export default function Chat() {
+  
   const navigate = useNavigate();
-  const socket = useRef<any>();
-  const [contacts, setContacts] = useState<any>([]);
-  const [currentChat, setCurrentChat] = useState<any>(undefined);
-  const [currentUser, setCurrentUser] = useState<any>(undefined);
+  const socket = useRef<Socket>();
+
+  const [state, setState] = useState<State>({
+    contacts: [],
+    currentChat: undefined,
+    currentUser: undefined,
+  });
 
   useEffect(() => {
-    if (!localStorage.getItem("userInfo")) {
+    console.log("socket effect")
+    const userInfo = localStorage.getItem("userInfo");
+    if (!userInfo) {
       navigate("/login");
-    } else {
-      setCurrentUser(JSON.parse(localStorage.getItem("userInfo") as string));
+      return;
     }
+    setState((prev) => ({
+      ...prev,
+      currentUser: JSON.parse(userInfo) as User,
+    }));
   }, []);
 
-  // useEffect(() => {
-  //   if (currentUser) {
-  //     socket.current = io(host);
-  //     socket.current.emit("add-user", currentUser._id);
-  //   }
-  // }, [currentUser]);
-
   const getAllUsers = () => {
-    axios.get(`${allUsersRoute}/${currentUser._id}`).then((res: any) => {
-      setContacts(res?.data);
+    axios.get(`${allUsersRoute}/${state.currentUser?._id}`).then((res: any) => {
+      setState((prev) => ({ ...prev, contacts: res?.data }));
     });
   };
 
+
+
   useEffect(() => {
-    if (currentUser) {
+    console.log("socket effect", socket.current)
+    if (state?.currentUser) {
       socket.current = io(host);
-      socket.current.emit("add-user", currentUser._id);
-      if (currentUser.isAvatarImageSet) {
+      socket.current.emit("add-user", state.currentUser._id);
+      if (state.currentUser.isAvatarImageSet) {
         getAllUsers();
       } else {
         navigate("/setAvatar");
       }
     }
-  }, [currentUser]);
+  }, [state.currentUser]);
 
   const handleChatChange = (chat: any) => {
-    setCurrentChat(chat);
+    setState((prev) => ({ ...prev, currentChat: chat }));
+    console.log("chat", chat);
   };
 
+  const memoizedContacts = useMemo(() => state.contacts, [state.contacts]);
   return (
     <>
       <Container>
         <div className="container">
-          <Contacts contacts={contacts} changeChat={handleChatChange} />
-          {currentChat === undefined ? (
+          <Contacts contacts={memoizedContacts} changeChat={handleChatChange} />
+          {state.currentChat === undefined ? (
             <Welcome />
           ) : (
-            <ChatContainer currentChat={currentChat} socket={socket} />
+            <ChatContainer currentChat={state.currentChat} socket={socket} />
           )}
         </div>
       </Container>
@@ -88,3 +96,25 @@ const Container = styled.div`
     }
   }
 `;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // const setUserSocketId = async (id: any) => {
+  //   console.log("id", id.id);
+  //   // await axios.put(
+  //   //   `${setSocketRoute}/${state.currentUser?._id}`,
+  //   //   { setSocketId: id.id } // Send setSocketId in the request body
+  //   // );
+  // };

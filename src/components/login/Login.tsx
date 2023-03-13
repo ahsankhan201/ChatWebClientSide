@@ -1,38 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import axios from "axios";
 import styled from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
-// import Logo from "../assets/logo.svg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loginRoute } from "../../utils/APIRoutes";
+import { toastOptions } from "../../utils/toastOptions";
 
 export default function Login() {
-  const navigate = useNavigate(); // import the useNavigate hook from React Router to handle navigation
-  const [values, setValues] = useState({ username: "", password: "" }); // initialize the state for the login form values
-  
-  // set options for the toast notifications
-  const toastOptions: any = {
-    position: "bottom-right",
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "dark",
-  };
-  
-  // check if there is a user already logged in and redirect to the home page if there is
+  const navigate = useNavigate();
+  const [values, setValues] = useState({ username: "", password: "" });
   useEffect(() => {
+    console.log("login called")
     if (localStorage.getItem("userInfo")) {
       navigate("/");
     }
   }, []);
-  
-  // handle changes to the form values
-  const handleChange = (event: any) => {
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
-  
-  // validate the form before submission
+
   const validateForm = () => {
     const { username, password } = values;
     if (username === "") {
@@ -44,22 +32,21 @@ export default function Login() {
     }
     return true;
   };
-  
-  // handle submission of the login form
-  const handleSubmit = async (event: any) => {
-    event.preventDefault(); // prevent default form submission behavior
-    if (validateForm()) { // if the form is valid
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (validateForm()) {
       const { username, password } = values;
-      const { data } = await axios.post(loginRoute, { // make a POST request to the server to log in
+      const { data } = await axios.post(loginRoute, {
         username,
         password,
       });
-      if (data.status === false) { // if login was unsuccessful, show an error toast
+      if (data.status === false) {
         toast.error(data.msg, toastOptions);
       }
-      if (data.status === true) { // if login was successful
-        localStorage.setItem("userInfo", JSON.stringify(data.user)); // store user info in localStorage
-        navigate("/"); // navigate to the home page
+      if (data.status === true) {
+        localStorage.setItem("userInfo", JSON.stringify(data.user));
+        navigate("/");
       }
     }
   };
@@ -67,11 +54,8 @@ export default function Login() {
   return (
     <>
       <FormContainer>
-        <form action=""
-         onSubmit={(event) => handleSubmit(event)}
-         >
+        <form action="" onSubmit={(event) => handleSubmit(event)}>
           <div className="brand">
-            {/* <img src={Logo} alt="logo" /> */}
             <h1>Technovez_Chat</h1>
           </div>
           <input

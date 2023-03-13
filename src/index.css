@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.password_style{
+margin-top: 10px;
+  background-color: grey;
+}
+.name_style{
+  margin-top: 10px;
+  background-color: grey;
+}
+
+.centertheText{
+  text-align: center;
+  margin: 0 auto;
+  font-size: 40px;
+
+}

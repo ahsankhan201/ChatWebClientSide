@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import styled from "styled-components";
 import ChatInput from "./ChatInput";
 import { v4 as uuidv4 } from "uuid";
@@ -11,13 +17,13 @@ interface Props {
   socket: any;
 }
 
-export default function ChatContainer({ currentChat, socket }: Props) {
+function ChatContainer({ currentChat, socket }: Props) {
   const [messages, setMessages] = useState<any>([]);
   const scrollRef = useRef<any>();
   const [arrivalMessage, setArrivalMessage] = useState<any>(null);
 
   const callContainer = async () => {
-    const data = JSON.parse(localStorage.getItem("userInfo") as string);
+    const data = JSON.parse(localStorage.getItem("userInfo") ?? "");
     const response = await axios.post(recieveMessageRoute, {
       from: data._id,
       to: currentChat._id,
@@ -26,44 +32,59 @@ export default function ChatContainer({ currentChat, socket }: Props) {
   };
 
   useEffect(() => {
-    callContainer();
+    console.log("currentChat", currentChat);
     const getCurrentChat = async () => {
       if (currentChat) {
-        await JSON.parse(localStorage.getItem("userInfo") as string)._id;
+        await JSON.parse(localStorage.getItem("userInfo") ?? "");
       }
     };
     getCurrentChat();
   }, [currentChat]);
 
-  const handleSendMsg = async (msg: any) => {
-    console.log("msg", msg);
-    const data = await JSON.parse(localStorage.getItem("userInfo") as string);
-    socket.current.emit("send-msg", {
-      to: currentChat._id,
-      from: data._id,
-      msg,
-    });
-    await axios.post(sendMessageRoute, {
-      from: data._id,
-      to: currentChat._id,
-      message: msg,
-    });
 
-    const msgs = [...messages];
-    msgs.push({ fromSelf: true, message: msg });
-    setMessages(msgs);
-  };
+  const handleSendMsg = useCallback(
+    async (msg: any) => {
+      const { _id } = await JSON.parse(
+        localStorage.getItem("userInfo") as string
+      );
+      console.log("currentChat._id", currentChat)
+      console.log("_id", _id)
+      socket.current.emit("send-msg", {
+        to: currentChat._id,
+        from: _id,
+        msg,
+      });
+      await axios.post(sendMessageRoute, {
+        from: _id,
+        to: currentChat._id,
+        message: msg,
+      });
+      setMessages([...messages, { fromSelf: true, message: msg }]);
+    },
+    [messages, socket, currentChat._id]
+  );
+  
+
+  const avatarImage = useMemo(() => {
+    return `data:image/svg+xml;base64,${currentChat.avatarImage}`;
+  }, [currentChat.avatarImage]);
 
   useEffect(() => {
-    // if (socket.current) {
-    socket.current.on("msg-recieve", (msg: any) => {
-      setArrivalMessage({ fromSelf: false, message: msg });
-    });
-    // }
-  }, [messages]);
+    callContainer();
+  }, [currentChat]);
 
   useEffect(() => {
-    arrivalMessage && setMessages((prev: any) => [...prev, arrivalMessage]);
+    if (socket.current) {
+      socket.current.on("msg-recieve", (msg: any) => {
+        setArrivalMessage({ fromSelf: false, message: msg });
+      });
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (arrivalMessage) {
+      setMessages((prev: any) => [...prev, arrivalMessage]);
+    }
   }, [arrivalMessage]);
 
   useEffect(() => {
@@ -75,10 +96,7 @@ export default function ChatContainer({ currentChat, socket }: Props) {
       <div className="chat-header">
         <div className="user-details">
           <div className="avatar">
-            <img
-              src={`data:image/svg+xml;base64,${currentChat.avatarImage}`}
-              alt=""
-            />
+            <img src={avatarImage} alt="" />
           </div>
           <div className="username">
             <h3>{currentChat.username}</h3>
@@ -107,6 +125,8 @@ export default function ChatContainer({ currentChat, socket }: Props) {
     </Container>
   );
 }
+
+export default React.memo(ChatContainer);
 
 const Container = styled.div`
   display: grid;
@@ -180,8 +200,3 @@ const Container = styled.div`
     }
   }
 `;
-
-
- // useEffect( () => {
-  //   callContainer();
-  // }, [currentChat]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 export default function Welcome() {
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState<string>("");
   useEffect(() => {
     setUserName(
       JSON.parse(localStorage.getItem("userInfo") as string).username
@@ -30,8 +30,3 @@ const Container = styled.div`
     color: #4e0eff;
   }
 `;
-
-{
-  /* <img src={Robot} alt="" /> */
-}
-// import Robot from "../assets/robot.gif";

@@ -1,56 +1,52 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { Contact, ContactsProps, UserInfo } from "../../models/interfaces";
 
-interface Props {
-  contacts: any;
-  changeChat: any;
-}
-
-export default function Contacts({ contacts, changeChat }: Props) {
-  const [currentUserName, setCurrentUserName] = useState("");
-  const [currentUserImage, setCurrentUserImage] = useState();
-  const [currentSelected, setCurrentSelected] = useState(undefined);
+function Contacts({ contacts, changeChat }: ContactsProps) {
+  const [currentUserName, setCurrentUserName] = useState<string | undefined>();
+  const [currentUserImage, setCurrentUserImage] = useState<string>("");
+  const [currentSelected, setCurrentSelected] = useState<number | undefined>();
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("userInfo") as string);
+    const data: UserInfo | null = JSON.parse(
+      localStorage.getItem("userInfo") as string
+    );
     setCurrentUserName(data?.username);
-    setCurrentUserImage(data?.avatarImage);
+    setCurrentUserImage(data?.avatarImage || "");
   }, []);
 
-  const changeCurrentChat = (index: any, contact: any) => {
+  const changeCurrentChat = (index: number, contact: Contact) => {
     setCurrentSelected(index);
     changeChat(contact);
   };
-  
+
   return (
     <>
-      {currentUserImage && currentUserImage && (
+      {currentUserImage && (
         <Container>
           <div className="brand">
             <h3>Technovez_Chat</h3>
           </div>
           <div className="contacts">
-            {contacts.map((contact: any, index: any) => {
-              return (
-                <div
-                  key={contact._id}
-                  className={`contact ${
-                    index === currentSelected ? "selected" : ""
-                  }`}
-                  onClick={() => changeCurrentChat(index, contact)}
-                >
-                  <div className="avatar">
-                    <img
-                      src={`data:image/svg+xml;base64,${contact.avatarImage}`}
-                      alt=""
-                    />
-                  </div>
-                  <div className="username">
-                    <h3>{contact.username}</h3>
-                  </div>
+            {contacts.map((contact: Contact, index: any | undefined) => (
+              <div
+                key={contact._id}
+                className={`contact ${
+                  index === currentSelected ? "selected" : ""
+                }`}
+                onClick={() => changeCurrentChat(index, contact)}
+              >
+                <div className="avatar">
+                  <img
+                    src={`data:image/svg+xml;base64,${contact.avatarImage}`}
+                    alt=""
+                  />
                 </div>
-              );
-            })}
+                <div className="username">
+                  <h3>{contact.username}</h3>
+                </div>
+              </div>
+            ))}
           </div>
           <div className="current-user">
             <div className="avatar">
@@ -68,6 +64,9 @@ export default function Contacts({ contacts, changeChat }: Props) {
     </>
   );
 }
+
+export default React.memo(Contacts);
+
 const Container = styled.div`
   display: grid;
   grid-template-rows: 10% 75% 15%;
