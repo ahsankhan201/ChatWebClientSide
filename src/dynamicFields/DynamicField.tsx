@@ -45,7 +45,6 @@ const DynamicField = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("my fields value", fields);
   };
 
   return (

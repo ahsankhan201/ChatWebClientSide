@@ -32,23 +32,18 @@ function ChatContainer({ currentChat, socket }: Props) {
   };
 
   useEffect(() => {
-    console.log("currentChat", currentChat);
-    const getCurrentChat = async () => {
-      if (currentChat) {
-        await JSON.parse(localStorage.getItem("userInfo") ?? "");
-      }
-    };
-    getCurrentChat();
-  }, [currentChat]);
-
+    callContainer();
+    if (arrivalMessage) {
+      setMessages((prev: any) => [...prev, arrivalMessage]);
+    }
+  }, [currentChat,arrivalMessage]);
 
   const handleSendMsg = useCallback(
     async (msg: any) => {
       const { _id } = await JSON.parse(
         localStorage.getItem("userInfo") as string
       );
-      console.log("currentChat._id", currentChat)
-      console.log("_id", _id)
+
       socket.current.emit("send-msg", {
         to: currentChat._id,
         from: _id,
@@ -63,33 +58,27 @@ function ChatContainer({ currentChat, socket }: Props) {
     },
     [messages, socket, currentChat._id]
   );
-  
 
   const avatarImage = useMemo(() => {
     return `data:image/svg+xml;base64,${currentChat.avatarImage}`;
   }, [currentChat.avatarImage]);
 
   useEffect(() => {
-    callContainer();
-  }, [currentChat]);
-
-  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     if (socket.current) {
       socket.current.on("msg-recieve", (msg: any) => {
         setArrivalMessage({ fromSelf: false, message: msg });
       });
     }
-  }, [socket]);
+  }, [socket,messages]);
 
-  useEffect(() => {
-    if (arrivalMessage) {
-      setMessages((prev: any) => [...prev, arrivalMessage]);
-    }
-  }, [arrivalMessage]);
+  // useEffect(() => {
+  //   if (arrivalMessage) {
+  //     setMessages((prev: any) => [...prev, arrivalMessage]);
+  //   }
+  // }, [arrivalMessage]);
 
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+
 
   return (
     <Container>

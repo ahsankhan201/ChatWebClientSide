@@ -21,6 +21,8 @@ export default function Register() {
     if (localStorage.getItem("userInfo")) {
       navigate("/");
     }
+
+    return () => {};
   }, []);
 
   const handleChange = (event: any) => {
@@ -59,7 +61,6 @@ export default function Register() {
     if (handleValidation()) {
       try {
         const { email, username, password } = values;
-        console.log(values);
         const { data } = await axios.post(registerRoute, {
           username,
           email,

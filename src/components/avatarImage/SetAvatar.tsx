@@ -14,7 +14,9 @@ export default function SetAvatar() {
   const navigate = useNavigate();
   const [avatars, setAvatars] = useState<string[]>(() => []);
   const [isLoading, setIsLoading] = useState<boolean>(() => true);
-  const [selectedAvatar, setSelectedAvatar] = useState<number | undefined>(() => undefined);
+  const [selectedAvatar, setSelectedAvatar] = useState<number | undefined>(
+    () => undefined
+  );
 
   const setProfilePicture = async () => {
     if (selectedAvatar === undefined) {
@@ -62,6 +64,10 @@ export default function SetAvatar() {
       return;
     }
     fetchAvatar();
+
+    // return(()=>{
+    //   setAvatars([]);
+    // })
   }, []);
 
   return (
@@ -77,7 +83,6 @@ export default function SetAvatar() {
           </div>
           <div className="avatars">
             {avatars.map((avatar: any, index: any) => {
-              console.log(avatar);
               return (
                 <div
                   className={`avatar ${

@@ -11,7 +11,6 @@ export default function Login() {
   const navigate = useNavigate();
   const [values, setValues] = useState({ username: "", password: "" });
   useEffect(() => {
-    console.log("login called")
     if (localStorage.getItem("userInfo")) {
       navigate("/");
     }

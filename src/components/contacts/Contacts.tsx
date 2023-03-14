@@ -13,6 +13,13 @@ function Contacts({ contacts, changeChat }: ContactsProps) {
     );
     setCurrentUserName(data?.username);
     setCurrentUserImage(data?.avatarImage || "");
+
+
+    // return () => {
+    //   setCurrentUserName('');
+    //   setCurrentUserImage('');
+    // };
+
   }, []);
 
   const changeCurrentChat = (index: number, contact: Contact) => {
@@ -20,12 +27,14 @@ function Contacts({ contacts, changeChat }: ContactsProps) {
     changeChat(contact);
   };
 
+  
+
   return (
     <>
       {currentUserImage && (
         <Container>
           <div className="brand">
-            <h3>Technovez_Chat</h3>
+            <h3>Technovez Chat</h3>
           </div>
           <div className="contacts">
             {contacts.map((contact: Contact, index: any | undefined) => (

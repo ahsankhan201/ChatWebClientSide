@@ -62,7 +62,7 @@ const InputContainer = styled.form`
   .btn_style {
     background-color: #4e0eff;
     color: white;
-    padding: 1rem 2rem;
+    padding: 1rem 1rem;
     border: none;
     font-weight: bold;
     cursor: pointer;

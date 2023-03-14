@@ -21,7 +21,6 @@ export default function Chat() {
   });
 
   useEffect(() => {
-    console.log("socket effect")
     const userInfo = localStorage.getItem("userInfo");
     if (!userInfo) {
       navigate("/login");
@@ -42,7 +41,6 @@ export default function Chat() {
 
 
   useEffect(() => {
-    console.log("socket effect", socket.current)
     if (state?.currentUser) {
       socket.current = io(host);
       socket.current.emit("add-user", state.currentUser._id);
@@ -52,11 +50,17 @@ export default function Chat() {
         navigate("/setAvatar");
       }
     }
+
+    // return () => {
+    //   if (socket.current) {
+    //     socket.current.disconnect();
+    //   }
+    // };
+
   }, [state.currentUser]);
 
   const handleChatChange = (chat: any) => {
     setState((prev) => ({ ...prev, currentChat: chat }));
-    console.log("chat", chat);
   };
 
   const memoizedContacts = useMemo(() => state.contacts, [state.contacts]);
@@ -110,11 +114,3 @@ const Container = styled.div`
 
 
 
-
-  // const setUserSocketId = async (id: any) => {
-  //   console.log("id", id.id);
-  //   // await axios.put(
-  //   //   `${setSocketRoute}/${state.currentUser?._id}`,
-  //   //   { setSocketId: id.id } // Send setSocketId in the request body
-  //   // );
-  // };
