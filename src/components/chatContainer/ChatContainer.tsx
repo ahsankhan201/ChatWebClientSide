@@ -9,9 +9,12 @@ import styled from "styled-components";
 import ChatInput from "./ChatInput";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { sendMessageRoute, recieveMessageRoute } from "../../utils/APIRoutes";
+import {
+  sendMessageRoute,
+  recieveMessageRoute,
+  addFileUploadRoute,
+} from "../../utils/APIRoutes";
 import Logout from "../logout/Logout";
-
 interface Props {
   currentChat: any;
   socket: any;
@@ -36,27 +39,66 @@ function ChatContainer({ currentChat, socket }: Props) {
     if (arrivalMessage) {
       setMessages((prev: any) => [...prev, arrivalMessage]);
     }
-  }, [currentChat,arrivalMessage]);
+  }, [currentChat, arrivalMessage]);
 
   const handleSendMsg = useCallback(
-    async (msg: any) => {
+    async (msg: any, file: any) => {
       const { _id } = await JSON.parse(
         localStorage.getItem("userInfo") as string
       );
+
+      if (file) {
+        // set the formData in the body to convert the file to base64 and send it to the server
+        const formData = new FormData();
+        formData.append("file", file[0]);
+        formData.append("from", _id);
+        formData.append("to", currentChat._id);
+        fetch(`${addFileUploadRoute}`, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => {
+            if (response) {
+              console.log("response", response);
+              return response.json();
+            } else {
+              throw new Error("Upload failed");
+            }
+          })
+          .then((data) => {
+            socket.current.emit(
+              "upload",
+              {
+                to: currentChat._id,
+                from: _id,
+                image: data,
+              },
+              setMessages([...messages, { fromSelf: true, image: data.image }]),
+              (status: any) => {}
+            );
+          })
+          .catch((error) => {
+            console.error("Upload failed: ", error.message);
+          });
+        return;
+      }
 
       socket.current.emit("send-msg", {
         to: currentChat._id,
         from: _id,
         msg,
       });
-      await axios.post(sendMessageRoute, {
-        from: _id,
-        to: currentChat._id,
-        message: msg,
-      });
-      setMessages([...messages, { fromSelf: true, message: msg }]);
+
+      if (msg) {
+        await axios.post(sendMessageRoute, {
+          from: _id,
+          to: currentChat._id,
+          message: msg,
+        });
+        setMessages([...messages, { fromSelf: true, message: msg }]);
+      }
     },
-    [messages, socket, currentChat._id]
+    [messages, socket, currentChat._id, arrivalMessage]
   );
 
   const avatarImage = useMemo(() => {
@@ -69,16 +111,17 @@ function ChatContainer({ currentChat, socket }: Props) {
       socket.current.on("msg-recieve", (msg: any) => {
         setArrivalMessage({ fromSelf: false, message: msg });
       });
+      socket.current.on("msg-recieve1", (msg: any) => {
+        setArrivalMessage({ fromSelf: false, image: msg.image });
+      });
     }
-  }, [socket,messages]);
+  }, [socket, messages, arrivalMessage]);
 
-  // useEffect(() => {
-  //   if (arrivalMessage) {
-  //     setMessages((prev: any) => [...prev, arrivalMessage]);
-  //   }
-  // }, [arrivalMessage]);
-
-
+  useEffect(() => {
+    if (arrivalMessage) {
+      setMessages((prev: any) => [...prev, arrivalMessage]);
+    }
+  }, [arrivalMessage]);
 
   return (
     <Container>
@@ -102,8 +145,45 @@ function ChatContainer({ currentChat, socket }: Props) {
                   message.fromSelf ? "sended" : "recieved"
                 }`}
               >
-                <div className="content ">
-                  <p>{message.message}</p>
+                <div className="content">
+                  {message.image ? (
+                    message.image.endsWith(".mp4") ||
+                    message.image.endsWith(".webm") ||
+                    message.image.endsWith(".ogg") ? (
+                      <video
+                        src={`http://localhost:8080/images/${message.image}`}
+                        style={{
+                          width: "300px",
+                          height: "200px",
+                        }}
+                        controls
+                      />
+                    ) : message.image.endsWith(".pdf") ||
+                      message.image.endsWith(".doc") ||
+                      message.image.endsWith(".docx") ||
+                      message.image.endsWith(".txt") ? (
+                      // show document element for document types
+                      <a
+                        href={`http://localhost:8080/images/${message.image}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {message.image}
+                      </a>
+                    ) : (
+                      // show image element for image types
+                      <img
+                        src={`http://localhost:8080/images/${message.image}`}
+                        alt=""
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                        }}
+                      />
+                    )
+                  ) : (
+                    <p>{message.message}</p>
+                  )}
                 </div>
               </div>
             </div>

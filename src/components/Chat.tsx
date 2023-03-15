@@ -10,7 +10,7 @@ import Welcome from "./welcome/Welcome";
 import { State, User } from "../models/interfaces";
 
 export default function Chat() {
-  
+
   const navigate = useNavigate();
   const socket = useRef<Socket>();
 
@@ -43,6 +43,8 @@ export default function Chat() {
   useEffect(() => {
     if (state?.currentUser) {
       socket.current = io(host);
+
+     
       socket.current.emit("add-user", state.currentUser._id);
       if (state.currentUser.isAvatarImageSet) {
         getAllUsers();
@@ -72,7 +74,7 @@ export default function Chat() {
           {state.currentChat === undefined ? (
             <Welcome />
           ) : (
-            <ChatContainer currentChat={state.currentChat} socket={socket} />
+            <ChatContainer currentChat={state.currentChat} socket={socket}  />
           )}
         </div>
       </Container>

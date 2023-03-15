@@ -26,3 +26,27 @@ margin-top: 10px;
   font-size: 40px;
 
 }
+
+.label_style{
+  color: white;
+  margin-left: 10px;
+  padding: 3px 10px;
+  font-size: 26px;
+  font-weight: 500;
+  font-family: emoji
+}
+
+.input_style{
+  width: 14rem;
+    height: 2rem;
+    border: 2px solid black;
+    border-radius: 57px;
+}
+.icon_input{
+  color:white;
+}
+.btn_style{
+  margin-left: 10px;
+  border: 2px solid black;
+  border-radius: 50px;
+}
