@@ -26,22 +26,34 @@ export default function ChatInput({ handleSendMsg }: Props) {
 
   return (
     <Container>
-      <form onSubmit={sendChat} encType="multipart/form-data">
+      <form
+        onSubmit={sendChat}
+        encType="multipart/form-data"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
+      >
         <MyLabel className="label_style" htmlFor="msg-input">
           Type your message here:
         </MyLabel>
-        <input
-          className="input_style"
-          id="msg-input"
-          type="text"
-          value={msg}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setMsg(e.target.value)
-          }
-        />
-        <MyLabel htmlFor="fileImage" className="label_style">
-          <RiUpload2Line size={30} />
-        </MyLabel>
+        <div style={{ display: "flex", flexDirection: "column",alignItems:'center',alignContent:'center' }}>
+          <input
+            className="input_style"
+            id="msg-input"
+            type="text"
+            value={msg}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setMsg(e.target.value)
+            }
+          />
+          <MyLabel htmlFor="fileImage" className="label_style1">
+            See Your attachments
+            {/* <RiUpload2Line size={30} /> */}
+          </MyLabel>
+        </div>
+
         <UserInput type="file" id="fileImage" onChange={handleFileChange} />
         <MyButton type="submit" className="btn_style">
           Submit <IoMdSend key="send-icon" />
@@ -52,9 +64,6 @@ export default function ChatInput({ handleSendMsg }: Props) {
 }
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   .label_style {
     color: white;
     justify-content: center;

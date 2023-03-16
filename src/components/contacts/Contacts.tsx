@@ -14,20 +14,16 @@ function Contacts({ contacts, changeChat }: ContactsProps) {
     setCurrentUserName(data?.username);
     setCurrentUserImage(data?.avatarImage || "");
 
-
     // return () => {
     //   setCurrentUserName('');
     //   setCurrentUserImage('');
     // };
-
   }, []);
 
   const changeCurrentChat = (index: number, contact: Contact) => {
     setCurrentSelected(index);
     changeChat(contact);
   };
-
-  
 
   return (
     <>

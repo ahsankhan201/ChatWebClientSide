@@ -15,6 +15,7 @@ import {
   addFileUploadRoute,
 } from "../../utils/APIRoutes";
 import Logout from "../logout/Logout";
+import BasicModal from "../../utils/PopUpModel";
 interface Props {
   currentChat: any;
   socket: any;
@@ -23,7 +24,9 @@ interface Props {
 function ChatContainer({ currentChat, socket }: Props) {
   const [messages, setMessages] = useState<any>([]);
   const scrollRef = useRef<any>();
-  const [arrivalMessage, setArrivalMessage] = useState<any>(null);
+  const [arrivalMessage, setArrivalMessage] = useState<any>([]);
+  const [modelOpen, setModelOpen] = useState(false);
+  const [userImage,setUserImage]=useState<string>('');
 
   const callContainer = async () => {
     const data = JSON.parse(localStorage.getItem("userInfo") ?? "");
@@ -43,63 +46,62 @@ function ChatContainer({ currentChat, socket }: Props) {
 
   const handleSendMsg = useCallback(
     async (msg: any, file: any) => {
-      const { _id } = await JSON.parse(
-        localStorage.getItem("userInfo") as string
-      );
-
+      const { _id } = await JSON.parse(localStorage.getItem("userInfo") as string);
+  
       if (file) {
-        // set the formData in the body to convert the file to base64 and send it to the server
-        const formData = new FormData();
-        formData.append("file", file[0]);
-        formData.append("from", _id);
-        formData.append("to", currentChat._id);
-        fetch(`${addFileUploadRoute}`, {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => {
-            if (response) {
-              console.log("response", response);
-              return response.json();
-            } else {
-              throw new Error("Upload failed");
-            }
-          })
-          .then((data) => {
-            socket.current.emit(
-              "upload",
-              {
-                to: currentChat._id,
-                from: _id,
-                image: data,
-              },
-              setMessages([...messages, { fromSelf: true, image: data.image }]),
-              (status: any) => {}
-            );
-          })
-          .catch((error) => {
-            console.error("Upload failed: ", error.message);
+        try {
+          const formData = new FormData();
+          formData.append("file", file[0]);
+          formData.append("from", _id);
+          formData.append("to", currentChat._id);
+          formData.append("message", msg);
+      
+          const response = await fetch(`${addFileUploadRoute}`, {
+            method: "POST",
+            body: formData,
           });
-        return;
+      
+          if (!response.ok) {
+            throw new Error("Upload failed");
+          }
+          const data = await response.json()
+          // console.log("data",data)
+          socket.current.emit("send-msg", {
+            to: currentChat._id,
+            from: _id,
+            msg,
+            image: data,
+          });
+         
+          setMessages([...messages, { fromSelf: true, image: data.image, message: data.message }]);
+        } catch (error) {
+          console.error("Upload failed: ", error);
+        }
       }
-
-      socket.current.emit("send-msg", {
-        to: currentChat._id,
-        from: _id,
-        msg,
-      });
-
-      if (msg) {
-        await axios.post(sendMessageRoute, {
-          from: _id,
+       else {
+        socket.current.emit("send-msg", {
           to: currentChat._id,
-          message: msg,
+          from: _id,
+          msg,
+          image: null,
         });
-        setMessages([...messages, { fromSelf: true, message: msg }]);
-      }
+    
+    
+          axios.post(sendMessageRoute, {
+            from: _id,
+            to: currentChat._id,
+            message: msg,
+            image: null,
+          }).then(() => {
+            setMessages([...messages, { fromSelf: true, message: msg,image:null }]);
+          }).catch((error) => {
+            console.error("Failed to post message: ", error.message);
+          });
+        }
     },
-    [messages, socket, currentChat._id, arrivalMessage]
+    [messages, socket, currentChat._id]
   );
+  
 
   const avatarImage = useMemo(() => {
     return `data:image/svg+xml;base64,${currentChat.avatarImage}`;
@@ -109,10 +111,8 @@ function ChatContainer({ currentChat, socket }: Props) {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     if (socket.current) {
       socket.current.on("msg-recieve", (msg: any) => {
-        setArrivalMessage({ fromSelf: false, message: msg });
-      });
-      socket.current.on("msg-recieve1", (msg: any) => {
-        setArrivalMessage({ fromSelf: false, image: msg.image });
+        // console.log("msg of socket",msg);
+        setArrivalMessage({ fromSelf: false, message: msg ? msg?.msg : null,image:msg?.image?msg?.image.image : null });
       });
     }
   }, [socket, messages, arrivalMessage]);
@@ -122,6 +122,11 @@ function ChatContainer({ currentChat, socket }: Props) {
       setMessages((prev: any) => [...prev, arrivalMessage]);
     }
   }, [arrivalMessage]);
+
+  const openModel=(userImage:string):any=>{
+    setUserImage(userImage);
+    setModelOpen(!modelOpen)
+  }
 
   return (
     <Container>
@@ -138,59 +143,64 @@ function ChatContainer({ currentChat, socket }: Props) {
       </div>
       <div className="chat-messages">
         {messages.map((message: any) => {
+          // console.log("all messages", message)
           return (
             <div ref={scrollRef} key={uuidv4()}>
-              <div
-                className={`message ${
-                  message.fromSelf ? "sended" : "recieved"
-                }`}
-              >
-                <div className="content">
-                  {message.image ? (
-                    message.image.endsWith(".mp4") ||
-                    message.image.endsWith(".webm") ||
-                    message.image.endsWith(".ogg") ? (
-                      <video
-                        src={`http://localhost:8080/images/${message.image}`}
-                        style={{
-                          width: "300px",
-                          height: "200px",
-                        }}
-                        controls
-                      />
-                    ) : message.image.endsWith(".pdf") ||
-                      message.image.endsWith(".doc") ||
-                      message.image.endsWith(".docx") ||
-                      message.image.endsWith(".txt") ? (
-                      // show document element for document types
-                      <a
-                        href={`http://localhost:8080/images/${message.image}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {message.image}
-                      </a>
-                    ) : (
-                      // show image element for image types
-                      <img
-                        src={`http://localhost:8080/images/${message.image}`}
-                        alt=""
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                        }}
-                      />
-                    )
+            <div
+              className={`message ${message.fromSelf ? "sended" : "recieved"}`}
+            >
+              <div className="content">
+               
+                {
+                message.image ? (
+                  message.image.endsWith(".mp4") ||
+                  message.image.endsWith(".webm") ||
+                  message.image.endsWith(".ogg") ? (
+                    <video
+                      src={`http://localhost:8080/images/${message.image}`}
+                      style={{
+                        width: "300px",
+                        height: "200px",
+                      }}
+                      controls
+                    />
+                  ) : message.image.endsWith(".pdf") ||
+                    message.image.endsWith(".doc") ||
+                    message.image.endsWith(".docx") ||
+                    message.image.endsWith(".txt") ? (
+                    <a
+                      href={`http://localhost:8080/images/${message.image}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {message.image}
+                    </a>
                   ) : (
-                    <p>{message.message}</p>
-                  )}
-                </div>
+                    <img
+                      onClick={()=>openModel(message.image)}
+                      src={`http://localhost:8080/images/${message.image}`}
+                      alt=""
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                      }}
+                    />
+                  )
+                ) : (
+                  null
+                )}
+                <p>{message?.message}</p>
               </div>
             </div>
+          </div>
+          
           );
         })}
       </div>
       <ChatInput handleSendMsg={handleSendMsg} />
+      {
+        modelOpen && <BasicModal modelOpen={modelOpen} setModelOpen={setModelOpen} userImage={userImage} />
+      }
     </Container>
   );
 }

@@ -33,7 +33,21 @@ margin-top: 10px;
   padding: 3px 10px;
   font-size: 26px;
   font-weight: 500;
-  font-family: emoji
+  font-family: emoji;
+ 
+}
+
+.label_style1{
+  color: blue;
+  margin-left: 10px;
+  padding: 3px 10px;
+  font-size: 26px;
+  font-weight: 500;
+  font-family: emoji;
+  border-bottom: 2px solid blue;
+  cursor: pointer;
+
+  /* border-radius: 50px; */
 }
 
 .input_style{
@@ -46,7 +60,7 @@ margin-top: 10px;
   color:white;
 }
 .btn_style{
-  margin-left: 10px;
+  margin-left: 0px;
   border: 2px solid black;
-  border-radius: 50px;
+  border-radius: 10px;
 }
