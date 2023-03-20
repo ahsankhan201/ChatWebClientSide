@@ -1,32 +1,19 @@
-import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+import { useState, useEffect } from "react";
+
 export default function Welcome() {
   const [userName, setUserName] = useState<string>("");
+
   useEffect(() => {
     setUserName(
       JSON.parse(localStorage.getItem("userInfo") as string).username
     );
   }, []);
   return (
-    <Container>
+    <div className="flex justify-center text-white flex-col">
       <h1>
-        Welcome, <span>{userName}</span>
+        Welcome, <span style={{ color: "#4e0eff" }}>{userName}</span>
       </h1>
       <h3>Please select a chat to Start messaging.</h3>
-    </Container>
+    </div>
   );
 }
-
-const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  flex-direction: column;
-  img {
-    height: 20rem;
-  }
-  span {
-    color: #4e0eff;
-  }
-`;

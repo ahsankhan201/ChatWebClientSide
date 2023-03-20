@@ -1,14 +1,11 @@
-import React, { useEffect, useState } from "react";
-import styled from "styled-components";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { Buffer } from "buffer";
 import { toastOptions } from "../../utils/toastOptions";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import { setAvatarRoute } from "../../utils/APIRoutes";
-import { UserInfo, AvatarData } from "../../models/interfaces";
-import { Avatarapi } from "../../constants/constants";
+import { UserInfo } from "../../models/interfaces";
+import { setUserProfile, updateUserIProfile } from "../../services/userService";
 
 export default function SetAvatar() {
   const navigate = useNavigate();
@@ -19,37 +16,32 @@ export default function SetAvatar() {
   );
 
   const setProfilePicture = async () => {
-    if (selectedAvatar === undefined) {
+    if (!selectedAvatar) {
       toast.error("Please select an avatar", toastOptions);
-    } else {
-      const user: UserInfo = JSON.parse(
-        localStorage.getItem("userInfo")?.trim() as string
-      );
-
-      const { data } = await axios.post<AvatarData>(
-        `${setAvatarRoute}/${user._id}`,
-        {
-          image: avatars[selectedAvatar],
-        }
-      );
-
-      if (data.isSet) {
-        user.isAvatarImageSet = true;
-        user.avatarImage = data.image;
-        localStorage.setItem("userInfo", JSON.stringify(user));
-        navigate("/");
-      } else {
-        toast.error("Error setting avatar. Please try again.", toastOptions);
-      }
+      return;
     }
+    const user: UserInfo = JSON.parse(
+      localStorage.getItem("userInfo")?.trim() as string
+    );
+    const { data } = (await updateUserIProfile(
+      user._id,
+      avatars[selectedAvatar]
+    )) as { data: any };
+    if (!data.isSet) {
+      toast.error("Error setting avatar. Please try again.", toastOptions);
+      return;
+    }
+    user.isAvatarImageSet = true;
+    user.avatarImage = data.image;
+    localStorage.setItem("userInfo", JSON.stringify(user));
+    navigate("/");
+    return;
   };
 
   const fetchAvatar = async () => {
     const data: string[] = [];
     for (let i = 0; i < 2; i++) {
-      const { data: image } = await axios.get(
-        `${Avatarapi}/${Math.round(Math.random() * 1000)}`
-      );
+      const { data: image } = (await setUserProfile()) as { data: any };
       const buffer = Buffer.from(image);
       data.push(buffer.toString("base64"));
     }
@@ -64,32 +56,33 @@ export default function SetAvatar() {
       return;
     }
     fetchAvatar();
-
-    // return(()=>{
-    //   setAvatars([]);
-    // })
   }, []);
 
   return (
     <>
       {isLoading ? (
-        <Container>
-          <h2>loading</h2>
-        </Container>
+        <div>
+          <h2>loading...</h2>
+        </div>
       ) : (
-        <Container>
-          <div className="title-container">
-            <h1>Pick an Avatar as your profile picture</h1>
+        <div className="flex justify-center items-center flex-col gap-12 bg-gray-900 h-screen w-screen">
+          <div className="text-white">
+            <h1 className="text-white">
+              Pick an Avatar as your profile picture
+            </h1>
           </div>
-          <div className="avatars">
+          <div className="flex gap-2">
             {avatars.map((avatar: any, index: any) => {
               return (
                 <div
-                  className={`avatar ${
-                    selectedAvatar === index ? "selected" : ""
+                  className={`class="border-4 border-transparent p-4 rounded-full flex justify-center items-center transition duration-500 ease-in-out" ${
+                    selectedAvatar === index
+                      ? "border-4 border-solid border-purple-600"
+                      : ""
                   }`}
                 >
                   <img
+                    className="h-8 border-4 border-solid border-purple-600"
                     src={`data:image/svg+xml;base64,${avatar}`}
                     alt="avatar"
                     key={avatar}
@@ -99,65 +92,15 @@ export default function SetAvatar() {
               );
             })}
           </div>
-          <button onClick={setProfilePicture} className="submit-btn">
+          <button
+            className="bg-purple-700 text-white px-8 py-4 border-none font-bold cursor-pointer rounded-md text-sm uppercase hover:bg-purple-80"
+            onClick={setProfilePicture}
+          >
             Set as Profile Picture
           </button>
           <ToastContainer />
-        </Container>
+        </div>
       )}
     </>
   );
 }
-
-const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 3rem;
-  background-color: #131324;
-  height: 100vh;
-  width: 100vw;
-  .loader {
-    max-inline-size: 100%;
-  }
-  .title-container {
-    h1 {
-      color: white;
-    }
-  }
-  .avatars {
-    display: flex;
-    gap: 2rem;
-    .avatar {
-      border: 0.4rem solid transparent;
-      padding: 0.4rem;
-      border-radius: 5rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: 0.5s ease-in-out;
-      img {
-        height: 6rem;
-        transition: 0.5s ease-in-out;
-      }
-    }
-    .selected {
-      border: 0.4rem solid #4e0eff;
-    }
-  }
-  .submit-btn {
-    background-color: #4e0eff;
-    color: white;
-    padding: 1rem 2rem;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 0.4rem;
-    font-size: 1rem;
-    text-transform: uppercase;
-    &:hover {
-      background-color: #4e0eff;
-    }
-  }
-`;

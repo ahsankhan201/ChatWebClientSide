@@ -1,16 +1,15 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import axios from "axios";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
-import styled from "styled-components";
-import { allUsersRoute, host } from "../utils/APIRoutes";
+import { host } from "../utils/APIRoutes";
 import ChatContainer from "./chatContainer/ChatContainer";
 import Contacts from "./contacts/Contacts";
 import Welcome from "./welcome/Welcome";
 import { State, User } from "../models/interfaces";
+import { getAllUsers } from "../services/userService";
 
 export default function Chat() {
-
+  const [messageCount, setMessageCount] = useState(0);
   const navigate = useNavigate();
   const socket = useRef<Socket>();
 
@@ -32,33 +31,23 @@ export default function Chat() {
     }));
   }, []);
 
-  const getAllUsers = () => {
-    axios.get(`${allUsersRoute}/${state.currentUser?._id}`).then((res: any) => {
-      setState((prev) => ({ ...prev, contacts: res?.data }));
-    });
+  const getSavedUsers = async () => {
+    const { data } = await getAllUsers(state?.currentUser?._id) as {
+      data: any;
+    };
+    setState((prev) => ({ ...prev, contacts: data }));
   };
-
-
 
   useEffect(() => {
     if (state?.currentUser) {
       socket.current = io(host);
-
-     
       socket.current.emit("add-user", state.currentUser._id);
-      if (state.currentUser.isAvatarImageSet) {
-        getAllUsers();
-      } else {
+      if (!state.currentUser.isAvatarImageSet) {
         navigate("/setAvatar");
+        return;
       }
+      getSavedUsers();
     }
-
-    // return () => {
-    //   if (socket.current) {
-    //     socket.current.disconnect();
-    //   }
-    // };
-
   }, [state.currentUser]);
 
   const handleChatChange = (chat: any) => {
@@ -66,53 +55,20 @@ export default function Chat() {
   };
 
   const memoizedContacts = useMemo(() => state.contacts, [state.contacts]);
+
   return (
     <>
-      <Container>
-        <div className="container">
+      <div className="h-full w-full flex flex-col justify-center gap-1 items-center chatBg">
+        <div className="chatMainWrapper">
           <Contacts contacts={memoizedContacts} changeChat={handleChatChange} />
-          {state.currentChat === undefined ? (
+
+          {!state.currentChat ? (
             <Welcome />
           ) : (
-            <ChatContainer currentChat={state.currentChat} socket={socket}  />
+            <ChatContainer currentChat={state.currentChat} socket={socket} />
           )}
         </div>
-      </Container>
+      </div>
     </>
   );
 }
-
-const Container = styled.div`
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1rem;
-  align-items: center;
-  background-color: #131324;
-  .container {
-    height: 85vh;
-    width: 85vw;
-    background-color: #00000076;
-    display: grid;
-    grid-template-columns: 25% 75%;
-    @media screen and (min-width: 720px) and (max-width: 1080px) {
-      grid-template-columns: 35% 65%;
-    }
-  }
-`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,14 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
-import React, { lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 
 const Chat = lazy(() => import("../components/Chat"));
 const Login = lazy(() => import("../components/login/Login"));
 const Register = lazy(() => import("../components/signup/Register"));
 const SetAvatar = lazy(() => import("../components/avatarImage/SetAvatar"));
-const SignUpFields = lazy(() => import("../dynamicFields/SignUpFields"));
-const DynamicField = lazy(() => import("../dynamicFields/DynamicField"));
 
-const router = createBrowserRouter([
+export default createBrowserRouter([
   {
     path: "/",
     element: (
@@ -41,22 +39,4 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
-  {
-    path: "/a",
-    element: (
-      <Suspense fallback={<div className="centertheText">Loading...</div>}>
-        <DynamicField />
-      </Suspense>
-    ),
-  },
-  {
-    path: "/sin",
-    element: (
-      <Suspense fallback={<div className="centertheText">Loading...</div>}>
-        <SignUpFields />
-      </Suspense>
-    ),
-  },
 ]);
-
-export default router;

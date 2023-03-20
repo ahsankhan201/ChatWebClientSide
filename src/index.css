@@ -1,4 +1,32 @@
-body {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.maindivcon{
+  display: grid;
+  grid-template-rows: 10% 75% 15%;
+  overflow: hidden;
+  background-color: #080420;
+}
+
+
+.chatMainWrapper{
+  height: 90vh;
+  width: 92vw;
+  background-color: #00000076;
+  display: grid;
+  grid-template-columns: 25% 75%;
+  @media screen and (min-width: 720px) and (max-width: 1080px) {
+    grid-template-columns: 35% 65%;
+  }
+}
+
+.chatBg{
+  background-color: #c7cbd1;
+}
+
+/* body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -24,7 +52,14 @@ margin-top: 10px;
   text-align: center;
   margin: 0 auto;
   font-size: 40px;
-
+}
+.input_style::placeholder{
+  color:black;
+  font-size: 20px;
+  font-weight: 500;
+  font-family: emoji;
+  align-items: center;
+  text-align: center;
 }
 
 .label_style{
@@ -38,29 +73,12 @@ margin-top: 10px;
 }
 
 .label_style1{
-  color: blue;
-  margin-left: 10px;
+  /* color: blue; */
+  /* margin-left: 10px;
   padding: 3px 10px;
   font-size: 26px;
   font-weight: 500;
+  color:black;
   font-family: emoji;
-  border-bottom: 2px solid blue;
-  cursor: pointer;
-
-  /* border-radius: 50px; */
-}
-
-.input_style{
-  width: 14rem;
-    height: 2rem;
-    border: 2px solid black;
-    border-radius: 57px;
-}
-.icon_input{
-  color:white;
-}
-.btn_style{
-  margin-left: 0px;
-  border: 2px solid black;
-  border-radius: 10px;
-}
+  /* border-bottom: 2px solid blue; */
+  

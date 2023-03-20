@@ -1,11 +1,9 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import axios from "axios";
-import styled from "styled-components";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { loginRoute } from "../../utils/APIRoutes";
 import { toastOptions } from "../../utils/toastOptions";
+import { getUserLogin } from "../../services/userService";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +11,7 @@ export default function Login() {
   useEffect(() => {
     if (localStorage.getItem("userInfo")) {
       navigate("/");
+      return;
     }
   }, []);
 
@@ -22,10 +21,7 @@ export default function Login() {
 
   const validateForm = () => {
     const { username, password } = values;
-    if (username === "") {
-      toast.error("Email and Password is required.", toastOptions);
-      return false;
-    } else if (password === "") {
+    if (username === "" || password === "") {
       toast.error("Email and Password is required.", toastOptions);
       return false;
     }
@@ -36,28 +32,36 @@ export default function Login() {
     event.preventDefault();
     if (validateForm()) {
       const { username, password } = values;
-      const { data } = await axios.post(loginRoute, {
-        username,
-        password,
-      });
-      if (data.status === false) {
-        toast.error(data.msg, toastOptions);
-      }
-      if (data.status === true) {
+      const { data } = (await getUserLogin(username, password)) as {
+        data: any;
+      };
+      if (!data?.status) {
+        toast.error(data?.msg, toastOptions);
+        return;
+      } else {
         localStorage.setItem("userInfo", JSON.stringify(data.user));
         navigate("/");
+        return;
       }
     }
   };
 
   return (
     <>
-      <FormContainer>
-        <form action="" onSubmit={(event) => handleSubmit(event)}>
-          <div className="brand">
-            <h1>Technovez_Chat</h1>
+      <div
+        className="h-screen w-screen flex flex-col justify-center gap-4 items-center bg-gray-900"
+        style={{ backgroundColor: "#131324" }}
+      >
+        <form
+          action=""
+          onSubmit={(event) => handleSubmit(event)}
+          className="flex flex-col gap-8 bg-black bg-opacity-60 rounded-xl p-20"
+        >
+          <div className="flex items-center justify-center">
+            <h1 className="text-white uppercase">Technovez_Chat</h1>
           </div>
           <input
+            className="bg-transparent px-4 py-2 border border-solid border-indigo-600 rounded-md text-white w-full text-base focus:border-indigo-300 outline-none"
             type="text"
             placeholder="Username"
             name="username"
@@ -65,86 +69,31 @@ export default function Login() {
             min="3"
           />
           <input
+            className="bg-transparent px-4 py-2 border border-solid border-indigo-600 rounded-md text-white w-full text-base focus:border-indigo-300 outline-none"
             type="password"
             placeholder="Password"
             name="password"
             onChange={(e) => handleChange(e)}
           />
-          <button type="submit">Log In</button>
-          <span>
-            Don't have an account ? <Link to="/register">Create One.</Link>
+
+          <button
+            type="submit"
+            className="bg-purple-700 text-white px-8 py-4 border-none font-bold cursor-pointer rounded-md text-sm uppercase hover:bg-purple-80"
+          >
+            Log In
+          </button>
+          <span className="text-white uppercase">
+            Don't have an account ?{" "}
+            <Link
+              to="/register"
+              className="text-indigo-600 no-underline font-bold"
+            >
+              Create One.
+            </Link>
           </span>
         </form>
-      </FormContainer>
+      </div>
       <ToastContainer />
     </>
   );
 }
-
-const FormContainer = styled.div`
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1rem;
-  align-items: center;
-  background-color: #131324;
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    justify-content: center;
-    img {
-      height: 5rem;
-    }
-    h1 {
-      color: white;
-      text-transform: uppercase;
-    }
-  }
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    background-color: #00000076;
-    border-radius: 2rem;
-    padding: 5rem;
-  }
-  input {
-    background-color: transparent;
-    padding: 1rem;
-    border: 0.1rem solid #4e0eff;
-    border-radius: 0.4rem;
-    color: white;
-    width: 100%;
-    font-size: 1rem;
-    &:focus {
-      border: 0.1rem solid #997af0;
-      outline: none;
-    }
-  }
-  button {
-    background-color: #4e0eff;
-    color: white;
-    padding: 1rem 2rem;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 0.4rem;
-    font-size: 1rem;
-    text-transform: uppercase;
-    &:hover {
-      background-color: #4e0eff;
-    }
-  }
-  span {
-    color: white;
-    text-transform: uppercase;
-    a {
-      color: #4e0eff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-  }
-`;
